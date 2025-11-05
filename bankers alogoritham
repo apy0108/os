@@ -1,0 +1,106 @@
+ BANKERS ALGORITHM
+
+#include <stdio.h>
+int main() {
+    int n, m, i, j, k;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);    // number of processes
+    printf("Enter number of resources: ");
+    scanf("%d", &m);    // number of resources
+
+    int alloc[n][m], max[n][m], avail[m];      // n = number of processes
+    int need[n][m], finish[n], safeSeq[n];     //   m = number of resource types
+
+    // Input Allocation Matrix
+    printf("\nEnter Allocation Matrix:\n");
+  for (i = 0; i < n; i++)    //  i → represents process index (row)
+        for (j = 0; j < m; j++)     //   j → represents resource index(column)
+     scanf("%d", &alloc[i][j]);
+
+    // Input Maximum Matrix
+    printf("\nEnter Maximum Matrix:\n");
+    for (i = 0; i < n; i++)
+        for (j = 0; j < m; j++)
+            scanf("%d", &max[i][j]);
+
+    // Input Available Resources
+    printf("\nEnter Available Resources:\n");
+    for (j = 0; j < m; j++)
+        scanf("%d", &avail[j]);
+
+    // Calculate Need Matrix
+    for (i = 0; i < n; i++)
+        for (j = 0; j < m; j++)
+            need[i][j] = max[i][j] - alloc[i][j];
+
+    for (i = 0; i < n; i++)
+        finish[i] = 0;   // initially  i=0  no process finished
+
+    int count = 0;   //Start with 0 processes completed.
+    while (count < n)  // Keep checking until all processes finish.
+ {
+        int found = 0; //  Assume no process can run in this round.
+        for (i = 0; i < n; i++)  // go through each process
+{
+            if (!finish[i])      // Only check processes that are not finished yet.
+{
+                int flag = 1;   // Assume this process can run.
+                for (j = 0; j < m; j++)  // Check all resource types for this process.
+{
+                    if (need[i][j] > avail[j])  //   If it needs more than what’s available, it can’t run.
+{
+                        flag = 0; //process  false or Mark that this process cannot run.
+                        break; // Stop checking further resources for this process.
+                    }
+                }
+                if (flag) // If the process can run safely, then do the following.
+ {
+                    for (k = 0; k < m; k++) // Go through each resource type.
+                        avail[k] += alloc[i][k]; // release resources
+                    safeSeq[count++] = i; //Record this process in the safe sequence and increase the count of finished processes.
+                    finish[i] = 1;   //i=1  process finished
+                    found = 1;
+                }
+            }
+        }
+        if (!found) {
+            printf("\nSystem is not in a safe state (Deadlock may occur).\n");
+            return 0;
+        }
+    }
+
+    // If safe sequence exists
+    printf("\nSystem is in a SAFE state.\nSafe sequence is: ");
+    for (i = 0; i < n; i++)
+        printf("P%d ", safeSeq[i]);
+    printf("\n");
+
+    return 0;
+}
+
+
+--------------------------------------OUTPUT---------------------------------------------------
+Enter number of processes: 3
+Enter number of resources: 2
+
+Enter Allocation Matrix:
+2
+1
+3
+2
+3
+0
+Enter Maximum Matrix:
+5
+6
+8
+5
+4
+8
+
+Enter Available Resources:
+7
+5
+System is in a SAFE state.
+Safe sequence is: P0 P1 P2 
+=== Code Execution Successful===
