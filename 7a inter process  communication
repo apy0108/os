@@ -1,3 +1,4 @@
+assignment 7b  interprocess comunication using shared memory using  system 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
