@@ -1,0 +1,93 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <unistd.h>
+
+#define SHM_KEY 0x1234
+#define SHM_SIZE 1024
+
+void run_server() {
+    // Create shared memory
+    int shmid = shmget(SHM_KEY, SHM_SIZE, 0666 | IPC_CREAT);
+    if (shmid == -1) {
+        perror("Server: shmget failed");
+        exit(1);
+    }
+
+    // Attach to shared memory
+    char *shared_mem = (char *)shmat(shmid, NULL, 0);
+    if (shared_mem == (char *)-1) {
+        perror("Server: shmat failed");
+        exit(1);
+    }
+
+    // Write a message
+    const char *message = "Hello from server!";
+    strncpy(shared_mem, message, SHM_SIZE);
+    printf("Server: Message written to shared memory.\n");
+
+    // Detach
+    shmdt(shared_mem);
+}
+
+void run_client() {
+    // Access shared memory
+    int shmid = shmget(SHM_KEY, SHM_SIZE, 0666);
+    if (shmid == -1) {
+        perror("Client: shmget failed");
+        exit(1);
+    }
+
+    // Attach to shared memory
+    char *shared_mem = (char *)shmat(shmid, NULL, 0);
+    if (shared_mem == (char *)-1) {
+        perror("Client: shmat failed");
+        exit(1);
+    }
+
+    // Read message
+    printf("Client: Message from server: %s\n", shared_mem);
+
+    // Detach
+    shmdt(shared_mem);
+
+    // Remove shared memory (optional cleanup)
+    shmctl(shmid, IPC_RMID, NULL);
+}
+
+int main() {
+    int choice;
+    printf("Select mode:\n1. Server\n2. Client\nEnter choice: ");
+    scanf("%d", &choice);
+
+    if (choice == 1) {
+        run_server();
+    } else if (choice == 2) {
+        run_client();
+    } else {
+        printf("Invalid choice.\n");
+    }
+
+    return 0;
+}
+
+OUTPUT:
+
+network@network-HCL-Desktop:~$ nano prac7b.c
+network@network-HCL-Desktop:~$ gcc prac7b.c -o prac7b
+network@network-HCL-Desktop:~$ ./prac7b
+Select mode:
+1. Server
+2. Client
+Enter choice: 1
+Server: Message written to shared memory.
+network@network-HCL-Desktop:~$ gcc prac7b.c -o prac7b
+network@network-HCL-Desktop:~$ ./prac7b
+Select mode:
+1. Server
+2. Client
+Enter choice: 2
+Client: Message from server: Hello from server!
