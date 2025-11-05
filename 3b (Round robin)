@@ -1,0 +1,89 @@
+ ROUND ROBIN
+
+#include <stdio.h>
+
+int main() {
+    int n, i, tq, time = 0, count = 0;
+    int bt[10], rt[10], ct[10], wt[10], tat[10];
+    float total_wt = 0, total_tat = 0;
+
+    printf("Enter number of processes (max 10): ");
+    scanf("%d", &n);
+
+    printf("Enter burst time for each process:\n");
+    for (i = 0; i < n; i++) {
+        printf("Process %d: ", i + 1);
+        scanf("%d", &bt[i]);
+        rt[i] = bt[i];  // Copy burst time to remaining time
+    }
+
+    printf("Enter time quantum: ");
+    scanf("%d", &tq);
+
+    while (1) {
+        int done = 1;
+
+        for (i = 0; i < n; i++) {
+            if (rt[i] > 0) {
+                done = 0;
+
+                if (rt[i] > tq) {
+                    time += tq;
+                    rt[i] -= tq;
+                    printf("Process %d executed for %d units. Time = %d\n", i + 1, tq, time);
+                } else {
+                    time += rt[i];
+                    printf("Process %d executed for %d units. Time = %d (Completed)\n", i + 1, rt[i], time);
+ rt[i] = 0;
+                    ct[i] = time;
+                    tat[i] = ct[i];         // Arrival time = 0
+                    wt[i] = tat[i] - bt[i];
+                    total_wt += wt[i];
+                    total_tat += tat[i];
+                    count++;
+                }
+            }
+        }
+
+        if (done == 1)
+            break;
+    }
+
+    // Output table
+    printf("\nP#\tBT\tCT\tTAT\tWT\n");
+    for (i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\t%d\n", i + 1, bt[i], ct[i], tat[i], wt[i]);
+    }
+
+    printf("\nAverage Turnaround Time: %.2f\n", total_tat / n);
+    printf("Average Waiting Time: %.2f\n", total_wt / n);
+
+    return 0;
+}
+
+OUTPUT:
+
+network@network-OEM:~$ nano rr.c
+network@network-OEM:~$ gcc rr.c -o rr
+network@network-OEM:~$ ./rr
+Enter number of processes (max 10): 3
+Enter burst time for each process:
+Process 1: 10
+Process 2: 6
+Process 3: 5
+Enter time quantum: 4
+Process 1 executed for 4 units. Time = 4
+Process 2 executed for 4 units. Time = 8
+Process 3 executed for 4 units. Time = 12
+Process 1 executed for 4 units. Time = 16
+Process 2 executed for 2 units. Time = 18 (Completed)
+Process 3 executed for 1 units. Time = 19 (Completed)
+Process 1 executed for 2 units. Time = 21 (Completed)
+
+P#	BT	CT	TAT	WT
+P1	10	21	21	11
+P2	6	18	18	12
+P3	5	19	19	14
+
+Average Turnaround Time: 19.33
+Average Waiting Time: 12.33
