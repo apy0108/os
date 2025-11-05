@@ -1,0 +1,86 @@
+A. Implement the C program in which main program accepts the integers to be sorted. 
+Main program uses the FORK system call to create new process called a Child Process . 
+Parent process sorts the integers using soting algorithm and waits for Child Process using WAIT system call to sort the integers using any sorting algorithm . 
+Also demonstrate zombie and orphan states .
+
+
+ GNU nano 4.8                                                                                                                      
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include<sys/wait.h>
+
+// Bubble Sort(used by parent)
+void bubbleSort(int arr[],int n)
+{
+ for(int i=0;i<n-1;i++)1
+  for(int j=0;j<n-i-1;j++)
+   if(arr[j] > arr[j+1]) {
+      int temp = arr[j];
+      arr[j] = arr[j+1];
+      arr[j+1] = temp;
+      }
+}
+
+//Insertion Sort(used by Child)
+void insertionSort(int arr[] , int n) {
+ for(int i = 1; i<n ;i++){
+  int key = arr[i];
+  int j = i-1;
+  while(j >= 0 && arr[j] > key) {
+ 
+  arr[j+1] = arr[j];
+  arr[j--];
+  }
+  arr[j+1] = key;
+ }
+}
+
+//Function to print array
+void printArray(int arr[],int n) {
+ for(int i=0 ; i<n; i++)
+  printf("%d" , arr[i]);
+ printf("\n");
+}
+
+int main() {
+ int n;
+
+printf("Enter no. of elements = ");
+scanf("%d" , &n);
+
+int arr[n];
+printf("Enter %d integers = \n",n);
+for(int i = 0; i<n ; i++)
+  scanf("%d",&arr[i]);
+
+pid_t pid = fork();
+
+if( pid < 0) {
+  perror("Fork failed");
+  return 1;
+}
+ else if(pid == 0) {
+ printf("\n [Child] ProcessID = %d \n",getpid());
+ printf("[Child] ParentID = %d \n" , getpid());
+ sleep(5);
+
+ insertionSort(arr , n);
+ printf("[Child] Sorted array using Insertion Sort = \n");
+ printArray(arr , n);
+ printf("[Child] Exiting...\n");
+ exit(0);
+}
+ else {
+       printf("\n [Parent] ProcessID = %d \n",getpid());
+       bubbleSort(arr , n);
+       printf(" [Parent] Sorted array using Bubble Sort = \n");
+       printArray(arr , n);
+      sleep(10);
+      
+      int status;
+       wait(&status);
+       printf(" [Parent] Child has finished. \n");
+      }
+       return 0;
+ } 
