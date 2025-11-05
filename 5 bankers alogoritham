@@ -1,4 +1,4 @@
- BANKERS ALGORITHM
+5 BANKERS ALGORITHM
 
 #include <stdio.h>
 int main() {
