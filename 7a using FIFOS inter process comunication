@@ -1,4 +1,4 @@
-assignment 7b  interprocess comunication using shared memory using  system 
+7a inter process  communication using fifos 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
