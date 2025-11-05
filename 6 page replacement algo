@@ -1,4 +1,4 @@
-Assignment No. 6
+6 Assignment No. 6
 Implement the C program for Page Replacement Algorithms: FCFS, LRU, and Optimal for frame size as minimum three.
 
 #include <stdio.h>
