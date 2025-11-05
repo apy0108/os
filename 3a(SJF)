@@ -1,0 +1,70 @@
+SHORTEST JOB FIRST(PREEMPTIVE)
+#include <stdio.h>
+#include <limits.h>
+int main() {
+int n, i, time = 0, completed = 0;
+float total_wait = 0, total_turnaround = 0;
+printf("Enter number of processes: ");
+scanf("%d", &n);
+int arrival[n], burst[n], remaining[n], waiting[n], turnaround[n];
+for (i = 0; i < n; i++) {
+printf("Enter arrival time and burst time for process %d: ", i + 1);
+scanf("%d %d", &arrival[i], &burst[i]);
+remaining[i] = burst[i];
+}
+while (completed != n) {
+int shortest = -1;
+int min_remaining = INT_MAX;
+for (i = 0; i < n; i++) {
+if (arrival[i] <= time && remaining[i] > 0 && remaining[i] <
+min_remaining) {
+
+min_remaining = remaining[i];
+shortest = i;
+}
+}
+if (shortest == -1) {
+time++; // No process is ready, CPU is idle
+continue;
+}
+remaining[shortest]--;
+time++;
+if (remaining[shortest] == 0) {
+completed++;
+int finish_time = time;
+turnaround[shortest] = finish_time - arrival[shortest];
+waiting[shortest] = turnaround[shortest] - burst[shortest];
+
+total_wait += waiting[shortest];
+total_turnaround += turnaround[shortest];
+}
+}
+printf("\nProcess\tArrival\tBurst\tWaiting\tTurnaround\n");
+for (i = 0; i < n; i++) {
+printf("P%d\t%d\t%d\t%d\t%d\n", i + 1, arrival[i], burst[i], waiting[i],
+turnaround[i]);
+}
+printf("\nAverage Waiting Time = %.2f", total_wait / n);
+printf("\nAverage Turnaround Time = %.2f\n", total_turnaround / n);
+return 0;
+}
+OUTPUT:
+network@network-OEM:~$ nano p3.c
+network@network-OEM:~$ gcc p3.c -o p3
+network@network-OEM:~$ ./p3
+Enter number of processes: 4
+Enter arrival time and burst time for process 1: 10
+6
+Enter arrival time and burst time for process 2: 8
+4
+Enter arrival time and burst time for process 3: 5
+2
+Enter arrival time and burst time for process 4: 3
+1
+Process Arrival Burst Waiting Turnaround
+P1 10 6 2 8
+P2 8 4 0 4
+P3 5 2 0 2
+P4 3 1 0 1
+Average Waiting Time = 0.50
+Average Turnaround Time = 3.75
