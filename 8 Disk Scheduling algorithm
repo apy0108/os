@@ -1,0 +1,206 @@
+                                                         Assignment No 8
+disk scheduling algorithm 
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int abs(int x) {
+    return (x < 0) ? -x : x;
+}
+
+// Utility function for sorting an array (simple bubble sort)
+void sortArray(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// ---------- SSTF Algorithm ----------
+int findClosestRequest(int requests[], int n, int head, int visited[]) {
+    int minDistance = 1e9;
+    int index = -1;
+    for (int i = 0; i < n; i++) {
+        if (!visited[i]) {
+            int distance = abs(requests[i] - head);
+            if (distance < minDistance) {
+                minDistance = distance;
+                index = i;
+            }
+        }
+    }
+    return index;
+}
+
+void SSTF(int requests[], int n, int head) {
+    int visited[n];
+    for (int i = 0; i < n; i++) visited[i] = 0;
+
+    int totalSeek = 0;
+    int currentHead = head;
+
+    printf("\nSSTF Disk Scheduling\n");
+    printf("Initial Head Position: %d\n", head);
+    printf("Seek Sequence: %d ", head);
+
+    for (int i = 0; i < n; i++) {
+        int nextIndex = findClosestRequest(requests, n, currentHead, visited);
+        visited[nextIndex] = 1;
+        totalSeek += abs(requests[nextIndex] - currentHead);
+        currentHead = requests[nextIndex];
+        printf("-> %d ", currentHead);
+    }
+
+    printf("\nTotal Seek Time: %d\n", totalSeek);
+}
+
+// ---------- SCAN Algorithm ----------
+void SCAN(int requests[], int n, int head, int diskSize) {
+    int totalSeek = 0;
+    int currentHead = head;
+
+    int left[n], right[n];
+    int leftCount = 0, rightCount = 0;
+
+    // Divide requests into left and right relative to head
+    for (int i = 0; i < n; i++) {
+        if (requests[i] >= head)
+            right[rightCount++] = requests[i];
+        else
+            left[leftCount++] = requests[i];
+    }
+
+    // Sort left and right arrays
+    sortArray(left, leftCount);
+    sortArray(right, rightCount);
+
+    printf("\nSCAN Disk Scheduling\n");
+    printf("Initial Head Position: %d\n", head);
+    printf("Seek Sequence: %d ", currentHead);
+
+    // Move right (away from spindle)
+    for (int i = 0; i < rightCount; i++) {
+        totalSeek += abs(right[i] - currentHead);
+        currentHead = right[i];
+        printf("-> %d ", currentHead);
+    }
+
+    // Go to the end of the disk (max cylinder)
+    if (currentHead != diskSize - 1) {
+        totalSeek += abs((diskSize - 1) - currentHead);
+        currentHead = diskSize - 1;
+        printf("-> %d ", currentHead);
+    }
+
+    // Move left (towards spindle)
+    for (int i = leftCount - 1; i >= 0; i--) {
+        totalSeek += abs(left[i] - currentHead);
+        currentHead = left[i];
+        printf("-> %d ", currentHead);
+    }
+
+    printf("\nTotal Seek Time: %d\n", totalSeek);
+}
+
+// ---------- C-LOOK Algorithm ----------
+void C_LOOK(int requests[], int n, int head) {
+    int totalSeek = 0;
+    int currentHead = head;
+
+    int left[n], right[n];
+    int leftCount = 0, rightCount = 0;
+
+    // Divide requests relative to head
+    for (int i = 0; i < n; i++) {
+        if (requests[i] >= head)
+            right[rightCount++] = requests[i];
+        else
+            left[leftCount++] = requests[i];
+    }
+
+    // Sort both arrays
+    sortArray(left, leftCount);
+    sortArray(right, rightCount);
+
+    printf("\nC-LOOK Disk Scheduling\n");
+    printf("Initial Head Position: %d\n", head);
+    printf("Seek Sequence: %d ", currentHead);
+
+    // Move right first
+    for (int i = 0; i < rightCount; i++) {
+        totalSeek += abs(right[i] - currentHead);
+        currentHead = right[i];
+        printf("-> %d ", currentHead);
+    }
+
+    // Jump to the lowest request on the left side (if any)
+    if (leftCount > 0) {
+        totalSeek += abs(currentHead - left[0]);
+        currentHead = left[0];
+        printf("-> %d ", currentHead);
+
+        // Continue moving right through left requests
+        for (int i = 1; i < leftCount; i++) {
+            totalSeek += abs(left[i] - currentHead);
+            currentHead = left[i];
+            printf("-> %d ", currentHead);
+        }
+    }
+
+    printf("\nTotal Seek Time: %d\n", totalSeek);
+}
+
+// ---------- Main ----------
+int main() {
+    int n, head, diskSize;
+
+    printf("Enter the number of requests: ");
+    scanf("%d", &n);
+
+    int requests[n];
+    printf("Enter the requests (cylinder numbers): ");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &requests[i]);
+    }
+
+    printf("Enter initial head position: ");
+    scanf("%d", &head);
+
+    printf("Enter disk size (number of cylinders): ");
+    scanf("%d", &diskSize);
+
+    // Run all algorithms
+    SSTF(requests, n, head);
+    SCAN(requests, n, head, diskSize);
+    C_LOOK(requests, n, head);
+    return 0;
+}
+OUTPUT :
+Enter the number of requests: 5
+Enter the requests (cylinder numbers): 3
+5
+6
+2
+1
+Enter initial head position: 1
+Enter disk size (number of cylinders): 5
+
+SSTF Disk Scheduling
+Initial Head Position: 1
+Seek Sequence: 1 -> 1 -> 2 -> 3 -> 5 -> 6 
+Total Seek Time: 5
+
+SCAN Disk Scheduling
+Initial Head Position: 1
+Seek Sequence: 1 -> 1 -> 2 -> 3 -> 5 -> 6 -> 4 
+Total Seek Time: 7
+
+C-LOOK Disk Scheduling
+Initial Head Position: 1
+Seek Sequence: 1 -> 1 -> 2 -> 3 -> 5 -> 6 
+Total Seek Time: 5
