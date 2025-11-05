@@ -1,0 +1,129 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
+#define MAX_LEN 1024
+#define FILE_NAME "output.txt"
+
+void count_data(const char *input, int *char_count, int *word_count, int *line_count) {
+    *char_count = *word_count = *line_count = 0;
+
+    int in_word = 0;
+
+    for (int i = 0; input[i] != '\0'; i++) {
+        (*char_count)++;
+
+        if (input[i] == '\n') {
+            (*line_count)++;
+        }
+
+        if (input[i] == ' ' || input[i] == '\n' || input[i] == '\t') {
+            in_word = 0;
+        } else if (in_word == 0) {
+            in_word = 1;
+            (*word_count)++;
+        }
+    }
+
+    // If no newline at end, still count it as a line
+    if (*char_count > 0 && input[strlen(input) - 1] != '\n') {
+        (*line_count)++;
+    }
+}
+
+int main() {
+    int pipe1[2]; // From parent to child
+    int pipe2[2]; // From child to parent
+    pid_t pid;
+
+    char input[MAX_LEN];
+    char result[MAX_LEN];
+
+    if (pipe(pipe1) == -1 || pipe(pipe2) == -1) {
+        perror("Pipe creation failed");
+        exit(1);
+    }
+
+    pid = fork();
+
+    if (pid < 0) {
+        perror("Fork failed");
+        exit(1);
+    }
+
+    if (pid > 0) {
+        // === Parent Process ===
+        close(pipe1[0]); // Close read end of pipe1
+        close(pipe2[1]); // Close write end of pipe2
+
+        printf("Enter a sentence (end with ENTER):\n");
+        fgets(input, MAX_LEN, stdin);
+
+        // Send input to child
+        write(pipe1[1], input, strlen(input) + 1);
+        close(pipe1[1]); // Close write end after sending
+
+        // Read result from child
+        read(pipe2[0], result, MAX_LEN);
+        close(pipe2[0]); // Close read end
+
+        // Display result
+        printf("\n=== Analysis Result from Child Process ===\n");
+        printf("%s\n", result);
+    } else {
+        // === Child Process ===
+        close(pipe1[1]); // Close write end of pipe1
+        close(pipe2[0]); // Close read end of pipe2
+
+        char buffer[MAX_LEN];
+        int char_count, word_count, line_count;
+
+        // Read input from parent
+        read(pipe1[0], buffer, MAX_LEN);
+        close(pipe1[0]); // Close read end
+
+        // Perform analysis
+        count_data(buffer, &char_count, &word_count, &line_count);
+
+        // Write result to file
+        FILE *fp = fopen(FILE_NAME, "w");
+        if (!fp) {
+            perror("File open failed");
+            exit(1);
+        }
+
+        fprintf(fp, "Characters: %d\nWords: %d\nLines: %d\n", char_count, word_count, line_count);
+        fclose(fp);
+
+        // Read from file and send to parent
+        fp = fopen(FILE_NAME, "r");
+        if (!fp) {
+            perror("File read failed");
+            exit(1);
+        }
+
+        fread(result, sizeof(char), MAX_LEN, fp);
+        fclose(fp);
+
+        write(pipe2[1], result, strlen(result) + 1);
+        close(pipe2[1]); // Close write end
+    }
+
+    return 0;
+}
+
+OUTPUT:
+
+Enter a sentence (end with ENTER):
+heelo world
+
+=== Analysis Result from Child Process ===
+Characters: 12
+Words: 2
+Lines: 1;
+
+
+}
