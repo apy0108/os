@@ -3,8 +3,7 @@ Main program uses the FORK system call to create new process called a Child Proc
 Parent process sorts the integers using soting algorithm and waits for Child Process using WAIT system call to sort the integers using any sorting algorithm . 
 Also demonstrate zombie and orphan states .
 
-
- GNU nano 4.8                                                                                                                      
+                                                                                                                   
 #include<stdio.h>
 #include<stdlib.h>
 #include<unistd.h>
